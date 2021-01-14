@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Top 50 Green Supercomputers</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+</head>
+<body>
+    <h1>Top 50 Green Supercomputers</h1>
+    <p> Anna Novak </p>
+    <svg id="chart"></svg>
+
+    <script>
+
+    const margins = {top:10, bottom:40, left:50, right:10}
+    const width = 400;
+    const height = 700;
+
+    const svg = d3.select("#chart")
+    .attr("width", width + margins.left + margins.right)
+    .attr("height", height + margins.top + margins.bottom);
+
+
+    const chart = svg.append("g")
+      .attr("transform", `translate(${margins.left}, ${margins.top})`);
+
+     const url = 'https://www.cs.middlebury.edu/~candrews/classes/cs465-f18/data/green500_top_201806.csv'
+
+     d3.csv(url).then((data)=>{
+       //trim to top 50
+     data = data.filter( d => d.Rank < 51);
+     console.log(data);
+
+      //x axis is Gflops/Watt (power efficiency)
+     const x_scale = d3.scaleLinear()
+      .range([0, width])
+      .domain([0, d3.max(data, (d)=> +d['Power Effeciency [GFlops/Watts]'])]);
+
+      //y axis is Green 500 rank
+     const y_scale = d3.scaleBand()
+       .rangeRound([0, height])
+       .domain(data.map((d) => d.Rank))
+       .padding(0.1);
+
+     chart.selectAll("rect")
+     .data(data)
+     .enter()
+     .append("rect")
+     .attr("x", 0)
+     .attr("y",(d)=>y_scale(d.Rank))  // origin is in top left corner, so y increases down
+     .attr("height", y_scale.bandwidth())
+     .attr("width", (d)=>x_scale(+d['Power Effeciency [GFlops/Watts]']))
+     .style("fill", 'dimgrey');
+
+
+     chart.selectAll(".country_label")
+      .data(data)
+      .enter()
+      .append("text")
+      .attr("x", 0)
+      .attr("y", (d)=>y_scale(d.Rank) + 3)
+      .attr("class", "country_label")
+      .attr('fill', 'white')
+       .attr("text-anchor", "start")
+       .attr("alignment-baseline", "hanging")
+       .attr("font-size", "9px")
+       .attr("font-family", "sans-serif")
+       .text((d)=>d.Country);
+
+     chart.append("g")
+       .attr("transform", `translate(0, ${height})`)
+       .call(d3.axisBottom(x_scale));
+
+
+       //labels by hand
+     chart.append("text")
+       .attr("text-anchor", "middle") //text-anchor is just where the text origin exists. For HW middle is NOT the right choice!
+       .attr("transform", `translate(${width/2}, ${height+margins.bottom})`)
+       .attr("font-size", "12px")
+       .attr("font-family", "sans-serif")
+       .attr("class", "axes")
+       .text("Power Efficiency (GFlops/Watts)");
+
+       chart.append("g")
+         .call(d3.axisLeft(y_scale));
+
+         //labels by hand
+       chart.append("text")
+         .attr("text-anchor", "middle") //text-anchor is just where the text origin exists. For HW middle is NOT the right choice!
+         .attr("transform", `translate(${-(3*margins.left/4)}, ${height/2})rotate(-90)`)
+         .attr("font-size", "12px")
+         .attr("font-family", "sans-serif")
+         .attr("class", "axes")
+         .text("Green 500 Rank");
+
+
+
+
+        // chart.append("text")
+        //   .attr("x", 0)
+        //   .attr("y", (d)=>y_scale(d.Rank))
+        //   .attr("font-size", "10px")
+        //   .text("Hello");
+
+
+     });
+
+    </script>
+</body>
+</html>
